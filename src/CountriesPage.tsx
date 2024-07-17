@@ -1,12 +1,11 @@
-// CountriesPage.tsx
-
 import React, { useState, useEffect } from 'react';
 import './CountriesPage.css';
 import Select from 'react-select';
 import { Link } from 'react-router-dom';
+import { Button, Typography, Grid, Card, CardContent, CardMedia } from '@mui/material';
 
 const BASE_URL = "https://restcountries.com/v3.1";
-const COUNTRIES_PER_PAGE = 10;
+const COUNTRIES_PER_PAGE = 20;
 
 interface Country {
     name: {
@@ -15,6 +14,7 @@ interface Country {
     flags: {
         png: string;
     };
+    capital?: string[];
 }
 
 const CountriesPage: React.FC = () => {
@@ -27,48 +27,34 @@ const CountriesPage: React.FC = () => {
 
     useEffect(() => {
         const fetchCountries = async () => {
-            try {
-                const response = await fetch(`${BASE_URL}/all`);
-                const data = await response.json();
-                setCountries(data);
-   
-                const capitals = data
-                    .filter((country: Country) => country.capital && country.capital[0])
-                    .map((country: Country) => ({ value: country.capital[0], label: country.capital[0] }));
-                setFilterableCapitals(capitals);
-   
-                // Calculate total pages based on number of countries and items per page
-                setTotalPages(Math.ceil(data.length / COUNTRIES_PER_PAGE));
-            } catch (error) {
-                console.error("Error fetching countries:", error);
-            }
+            const response = await fetch(`${BASE_URL}/all`);
+            const data = await response.json();
+            setCountries(data);
+            const capitals = data
+                .filter((country: Country) => country.capital && country.capital[0])
+                .map((country: Country) => ({ value: country.capital[0], label: country.capital[0] }));
+            setFilterableCapitals(capitals);
+            setTotalPages(Math.ceil(data.length / COUNTRIES_PER_PAGE));
         };
-   
+
         fetchCountries();
     }, []);
-   
+
     useEffect(() => {
-        // Calculate the index range for the current page
         const startIndex = (currentPage - 1) * COUNTRIES_PER_PAGE;
         const endIndex = startIndex + COUNTRIES_PER_PAGE;
         setFilteredCountries(countries.slice(startIndex, endIndex));
     }, [currentPage, countries]);
-   
+
     const handleSelectChange = (selectedOption: any) => {
         const selectedCapital = selectedOption.value;
         setCapital(selectedCapital);
-
-        if (selectedCapital) {
-            const filtered = countries.filter((country: Country) =>
-                country.capital && country.capital[0] === selectedCapital
-            );
-            setFilteredCountries(filtered.slice(0, COUNTRIES_PER_PAGE)); // Reset to first page
-            setTotalPages(Math.ceil(filtered.length / COUNTRIES_PER_PAGE)); // Update total pages
-        } else {
-            setFilteredCountries(countries.slice(0, COUNTRIES_PER_PAGE)); // Reset to first page
-            setTotalPages(Math.ceil(countries.length / COUNTRIES_PER_PAGE)); // Update total pages
-        }
-        setCurrentPage(1); // Reset current page to 1
+        const filtered = countries.filter((country: Country) =>
+            country.capital && country.capital[0] === selectedCapital
+        );
+        setFilteredCountries(filtered.slice(0, COUNTRIES_PER_PAGE));
+        setTotalPages(Math.ceil(filtered.length / COUNTRIES_PER_PAGE));
+        setCurrentPage(1);
     };
 
     const handlePrevPage = () => {
@@ -81,14 +67,16 @@ const CountriesPage: React.FC = () => {
 
     const handleReset = () => {
         setCapital(undefined);
-        setFilteredCountries(countries.slice(0, COUNTRIES_PER_PAGE)); // Reset to first page
-        setTotalPages(Math.ceil(countries.length / COUNTRIES_PER_PAGE)); // Update total pages
-        setCurrentPage(1); // Reset current page to 1
+        setFilteredCountries(countries.slice(0, COUNTRIES_PER_PAGE));
+        setTotalPages(Math.ceil(countries.length / COUNTRIES_PER_PAGE));
+        setCurrentPage(1);
     };
-   
+
     return (
         <div className="countries-page">
-            <h1>Countries Page</h1>
+            <Typography variant="h4" gutterBottom>
+                Countries Page
+            </Typography>
             <div className="select-container">
                 <Select
                     onChange={handleSelectChange}
@@ -96,23 +84,38 @@ const CountriesPage: React.FC = () => {
                     placeholder="Select a capital"
                 />
             </div>
-            <div className="country-list">
+            <Grid container spacing={2} className="country-list">
                 {filteredCountries.map((country, index) => (
-                    <div key={index} className="country-card">
-                        <h3>{country.name.common}</h3>
-                        <img src={country.flags.png} alt={`Flag of ${country.name.common}`} className="flag-image" />
-                    </div>
+                    <Grid item xs={6} sm={4} md={3} key={index}>
+                        <Card className="country-card">
+                            <CardMedia
+                                component="img"
+                                image={country.flags.png}
+                                alt={`Flag of ${country.name.common}`}
+                                className="flag-image"
+                            />
+                            <CardContent>
+                                <Typography variant="subtitle1" component="div">
+                                    {country.name.common}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
                 ))}
-            </div>
+            </Grid>
             <div className="pagination">
-                <button className="btn btn-outline-primary" onClick={handlePrevPage} disabled={currentPage === 1}>Previous</button>
+                <Button variant="outlined" onClick={handlePrevPage} disabled={currentPage === 1}>
+                    Previous
+                </Button>
                 <span className="mx-3">{currentPage} / {totalPages}</span>
-                <button className="btn btn-outline-primary" onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+                <Button variant="outlined" onClick={handleNextPage} disabled={currentPage === totalPages}>
+                    Next
+                </Button>
             </div>
             <div className="button-container">
-                <button className="btn btn-primary" onClick={handleReset}>Reset</button>
+                <Button variant="contained" onClick={handleReset} color="primary">Reset</Button>
                 <Link to="/login">
-                    <button className="btn btn-primary">Login</button>
+                    <Button variant="contained" color="secondary">Login</Button>
                 </Link>
             </div>
         </div>
