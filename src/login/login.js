@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { TokenContext } from '../TokenContext';
 import { Button, TextField, Alert, CircularProgress } from '@mui/material';
-import '../styles.css';
+import '../styles.css'; // Import your CSS file
 import './login.css';
 
 const Login = () => {
@@ -15,7 +15,6 @@ const Login = () => {
 
     const handleLogin = async () => {
         setIsLoading(true);
-        setError('');
         try {
             const response = await fetch('http://localhost:8080/demo/user/login', {
                 method: 'POST',
@@ -24,22 +23,22 @@ const Login = () => {
                 },
                 body: JSON.stringify({ email, password }),
             });
-    
+
             setIsLoading(false);
             if (response.ok) {
                 const data = await response.json();
-                setToken(data.token, data.userName); // Make sure userName is returned from your backend
+                setToken(data.token, data.userName); // Save userName as well
                 navigate('/');
             } else {
                 const errorData = await response.json();
-                setError(errorData.message || 'Invalid credentials.');
+                alert('Login failed: ' + (errorData.message || 'Invalid credentials.'));
             }
         } catch (error) {
             setIsLoading(false);
             console.error('Error during login:', error);
-            setError('An error occurred: ' + error.message);
+            alert('An error occurred: ' + error.message);
         }
-    };    
+    };
 
     return (
         <div className="login-page">
